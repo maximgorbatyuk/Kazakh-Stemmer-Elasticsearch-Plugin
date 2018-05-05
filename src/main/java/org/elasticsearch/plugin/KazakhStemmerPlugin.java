@@ -29,8 +29,7 @@ public class KazakhStemmerPlugin extends Plugin implements AnalysisPlugin {
     public Map<String, AnalysisModule.AnalysisProvider<TokenFilterFactory>> getTokenFilters()
     {
         Map<String, AnalysisModule.AnalysisProvider<TokenFilterFactory>> dictOut = new LinkedHashMap<>();
-        dictOut.put("kazakh-token-filter", KazakhStemmerTokenFilterFactory::new);
-
+        dictOut.put("kazakh_stemmer_token_filter", KazakhStemmerTokenFilterFactory::new);
         return dictOut;
     }
 }
