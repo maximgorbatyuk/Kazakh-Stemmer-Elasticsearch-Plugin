@@ -1,21 +1,20 @@
 package org.elasticsearch.plugin;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 // Код практически скопипастен отсюда
 // https://github.com/vgrichina/ukrainian-stemmer/blob/master/src/main/groovy/com/componentix/nlp/stemmer/uk/Stemmer.groovy
 
 public class KazakhStemmerTokenFilter extends TokenFilter {
 
-    // чтобы юнит-тесты работали, нужно комментить. Есть идея моками оборачивать, но пока хз
-    private final static Logger _logger = LogManager.getLogger(TokenFilter.class);
     /**
      * Construct a token stream filtering the given input.
      *
@@ -42,45 +41,60 @@ public class KazakhStemmerTokenFilter extends TokenFilter {
 
     private static final int PROCESSING_MINIMAL_WORD_LENGTH = 2;
 
+    //private final static Logger LOGGER = LogManager.getLogger(KazakhStemmerTokenFilter.class);
 
     public static String stem(String word)
     {
-        _logger.info("Source Word: " + word);
         // don't change short words
         if (word.length() <= PROCESSING_MINIMAL_WORD_LENGTH ) return word;
 
         // try simple trim
-        for (String suffix : suffixes) {
+        for (String suffixSource : suffixes) {
 
+            String suffix = ToUtf8Encode(suffixSource);
             if (word.endsWith(suffix)) {
                 String trimmed = word.substring(0, word.length() - suffix.length());
 
                 if (trimmed.length() > PROCESSING_MINIMAL_WORD_LENGTH) {
-                    _logger.info("Trimmed Word: " + trimmed);
+                    //LOGGER.info("Trimmed \"" + trimmed + "\". suffix: " + suffix);
                     return trimmed;
                 }
             } else {
-                _logger.info("\"" + word + "\" does not ends with: " + suffix);
+                //LOGGER.info("Not trimmed \"" + word + "\". suffix: " + suffix);
             }
         }
-        _logger.info("Result Word: " + word);
         return word;
     }
 
-    private static final String suffixes[] = new String[] {
+    // окончания расставлены в массиве так, чтобы сначала отсекались наиболее длинное сочетание букв
+    private static String suffixes[] = {
+            "сыңдар", "сiңдер","ңыздар", "ңiздер","сыздар", "сiздер", "шалық", "шелік",
+            "даған", "деген", "таған", "теген", "лаған", "леген","дайын", "дейін", "тайын", "тейін",
+
+            "ңдар", "ңдер", "дiкi", "тiкi", "нiкi", "атын", "етiн","йтын", "йтiн",
+            "гелi", "қалы", "келi", "ғалы", "шама", "шеме",
+
             "мын", "мiн", "бын", "бiн", "пын", "пiн", "мыз", "мiз", "быз", "бiз", "пыз", "пiз", "сың", "сiң",
-            "сыңдар", "сiңдер", "сыз", "сiз", "сыздар", "сiздер", "ңдар", "ңдер", "ңыз",
-            "ңiз", "ңыздар", "ңiздер", "сы", "сi", "дан", "ден", "тан", "тен", "нан", "нен", "да",
-            "де", "та", "те", "нда", "нде", "ға", "ге", "қа", "ке", "на", "не", "дың", "дiң", "тың",
-            "тiң", "ның", "нiң", "ды", "дi", "ты", "тi", "ны", "нi", "н", "дiкi", "тiкi", "нiкi", "дар", "дер",
-            "тар", "тер", "лар", "лер", "ба", "бе", "па", "пе", "ма", "ме", "бен", "пен", "мен", "лы", "лi",
-            "ғы", "гi", "қы", "кi", "дай", "дей", "тай", "тей", "дық", "дiк", "тық", "тiк", "лық", "лiк", "паз",
-            "ғыш", "гiш", "қыш", "кiш", "шек", "шақ", "шыл", "шiл", "ншi", "ншы", "ау", "еу", "дап", "деп",
-            "тап", "теп", "лап", "леп", "даған", "деген", "таған", "теген", "лаған", "леген", "ла", "ле", "даc",
-            "деc", "таc", "теc", "лаc", "леc", "ар", "ер", "ғар", "гер", "қар", "кер", "дыр", "дiр", "тыр",
-            "тiр", "ғыз", "гiз", "қыз", "кiз", "ған", "ген", "қан", "кен", "атын", "етiн",
-            "йтын", "йтiн", "ушы", "ушi", "р", "п", "ып", "iп", "й", "ғалы", "гелi", "қалы", "келi", "ша", "ше",
-            "лай", "лей", "дайын", "дейін", "тайын", "тейін", "шама", "шеме", "шалық", "шелік", "сын", "сiн", "са",
-            "се", "бақ", "бек", "пақ", "пек", "мақ", "мек", "йын", "йiн", "йық", "йiк"
+            "сыз", "сiз", "ңыз", "ңiз", "дан", "ден", "тан", "тен", "нан", "нен", "нда", "нде", "дың", "дiң", "тың",
+            "тiң", "ның", "нiң", "дар", "дер", "тар", "тер", "лар", "лер", "бен", "пен", "мен",
+            "дай", "дей", "тай", "тей", "дық", "дiк", "тық", "тiк", "лық", "лiк", "паз",
+            "ғыш", "гiш", "қыш", "кiш", "шек", "шақ", "шыл", "шiл", "ншi", "ншы", "дап", "деп",
+            "тап", "теп", "лап", "леп", "даc", "деc", "таc", "теc", "лаc", "леc", "ғар", "гер", "қар", "кер", "дыр",
+            "дiр", "тыр", "тiр", "ғыз", "гiз", "қыз", "кiз", "ған", "ген", "қан", "кен",
+            "ушы", "ушi", "лай", "лей", "сын", "сiн", "бақ", "бек", "пақ", "пек", "мақ", "мек", "йын", "йiн", "йық", "йiк",
+
+            "сы", "сi", "да", "де", "та", "те", "ға", "ге", "қа", "ке", "на", "не",
+            "дi", "ты", "тi", "ны", "нi", "ды", "ба", "бе", "па", "пе", "ма", "ме",
+            "лы", "лi", "ғы", "гi", "қы", "кi", "ау", "еу", "ла", "ле", "ар", "ер",
+            "ып", "iп", "ша", "ше", "са", "се",
+
+            "н", "р", "п", "й",
     };
+
+
+    public static final Charset WINDOWS_1251 = Charset.forName("WINDOWS-1251");
+    private static String ToUtf8Encode(String source){
+        byte[] byteText = source.getBytes(WINDOWS_1251);
+        return new String(byteText , UTF_8);
+    }
 }
