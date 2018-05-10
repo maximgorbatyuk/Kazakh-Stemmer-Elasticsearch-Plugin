@@ -1,16 +1,21 @@
 package org.elasticsearch.plugin;
 
-import java.io.IOException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
+
+import java.io.IOException;
 
 // Код практически скопипастен отсюда
 // https://github.com/vgrichina/ukrainian-stemmer/blob/master/src/main/groovy/com/componentix/nlp/stemmer/uk/Stemmer.groovy
 
 public class KazakhStemmerTokenFilter extends TokenFilter {
 
+    // чтобы юнит-тесты работали, нужно комментить. Есть идея моками оборачивать, но пока хз
+    private final static Logger _logger = LogManager.getLogger(TokenFilter.class);
     /**
      * Construct a token stream filtering the given input.
      *
@@ -35,25 +40,34 @@ public class KazakhStemmerTokenFilter extends TokenFilter {
         return true;
     }
 
-    public String stem(String word)
+    private static final int PROCESSING_MINIMAL_WORD_LENGTH = 2;
+
+
+    public static String stem(String word)
     {
+        _logger.info("Source Word: " + word);
         // don't change short words
-        if (word.length() <= 2 ) return word;
+        if (word.length() <= PROCESSING_MINIMAL_WORD_LENGTH ) return word;
 
         // try simple trim
         for (String suffix : suffixes) {
+
             if (word.endsWith(suffix)) {
                 String trimmed = word.substring(0, word.length() - suffix.length());
-                if (trimmed.length() > 2) {
+
+                if (trimmed.length() > PROCESSING_MINIMAL_WORD_LENGTH) {
+                    _logger.info("Trimmed Word: " + trimmed);
                     return trimmed;
                 }
+            } else {
+                _logger.info("\"" + word + "\" does not ends with: " + suffix);
             }
         }
-
+        _logger.info("Result Word: " + word);
         return word;
     }
 
-    private final String suffixes[] = new String[] {
+    private static final String suffixes[] = new String[] {
             "мын", "мiн", "бын", "бiн", "пын", "пiн", "мыз", "мiз", "быз", "бiз", "пыз", "пiз", "сың", "сiң",
             "сыңдар", "сiңдер", "сыз", "сiз", "сыздар", "сiздер", "ңдар", "ңдер", "ңыз",
             "ңiз", "ңыздар", "ңiздер", "сы", "сi", "дан", "ден", "тан", "тен", "нан", "нен", "да",
