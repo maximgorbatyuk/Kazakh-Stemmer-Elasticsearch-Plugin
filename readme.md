@@ -41,7 +41,7 @@ PUT /kazakh_stemmer_example_index
 ```
 
 Если используется .NET и клиент NEST, то можно так:
-```
+```csharp
 public method Nest.ICreateIndexRequest CreateIndexDescriptor(string awesomeIndexName)
 {
     var descriptor = new CreateIndexDescriptor(awesomeIndexName)
@@ -51,9 +51,9 @@ public method Nest.ICreateIndexRequest CreateIndexDescriptor(string awesomeIndex
                     tokenFilters
                         .UserDefined("kazakh_stemmer", new CustomStemmerTokenFilter("kazakh_stemmer_token_filter"))
                 .Analyzers(analyzer => analyzer
-                    .Custom(ElasticUtils.KazAnalyzerName, customAnalyzer => customAnalyzer
+                    .Custom("awesome_analyzer", customAnalyzer => customAnalyzer
                         .Tokenizer("standard")
-                        .Filters("standard", "lowercase", "asciifolding", "kaspiguide_kazakh_stemmer")))))
+                        .Filters("standard", "lowercase", "asciifolding", "kazakh_stemmer")))))
         .Mappings(mappings => mappings
             .Map<AwesomeIndexData>(m => m.AutoMap()));
 
