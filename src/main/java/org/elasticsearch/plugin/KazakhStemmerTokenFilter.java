@@ -6,9 +6,6 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 // Код практически скопипастен отсюда
 // https://github.com/vgrichina/ukrainian-stemmer/blob/master/src/main/groovy/com/componentix/nlp/stemmer/uk/Stemmer.groovy
@@ -41,7 +38,8 @@ public class KazakhStemmerTokenFilter extends TokenFilter {
 
     private static final int PROCESSING_MINIMAL_WORD_LENGTH = 2;
 
-    //private final static Logger LOGGER = LogManager.getLogger(KazakhStemmerTokenFilter.class);
+    // Оставлю, если нужно будет вернуть логгирование зачем-нибудь
+    // private final static Logger LOGGER = LogManager.getLogger(KazakhStemmerTokenFilter.class);
 
     public static String stem(String word)
     {
@@ -49,27 +47,23 @@ public class KazakhStemmerTokenFilter extends TokenFilter {
         if (word.length() <= PROCESSING_MINIMAL_WORD_LENGTH ) return word;
 
         // try simple trim
-        for (String suffixSource : suffixes) {
-
-            String suffix = ToUtf8Encode(suffixSource);
+        for (String suffix : suffixes) {
             if (word.endsWith(suffix)) {
                 String trimmed = word.substring(0, word.length() - suffix.length());
-
                 if (trimmed.length() > PROCESSING_MINIMAL_WORD_LENGTH) {
-                    //LOGGER.info("Trimmed \"" + trimmed + "\". suffix: " + suffix);
                     return trimmed;
                 }
-            } else {
-                //LOGGER.info("Not trimmed \"" + word + "\". suffix: " + suffix);
             }
         }
         return word;
     }
 
     // окончания расставлены в массиве так, чтобы сначала отсекались наиболее длинное сочетание букв
+    // была проблема с кодировкой этих текстов, но проставление метки в gradle.build с явной кодировкой UTF-8 помогает
     private static String suffixes[] = {
-            "сыңдар", "сiңдер","ңыздар", "ңiздер","сыздар", "сiздер", "шалық", "шелік",
-            "даған", "деген", "таған", "теген", "лаған", "леген","дайын", "дейін", "тайын", "тейін",
+            "сыңдар", "сiңдер","ңыздар", "ңiздер","сыздар", "сiздер",
+
+            "шалық", "шелік", "даған", "деген", "таған", "теген", "лаған", "леген","дайын", "дейін", "тайын", "тейін",
 
             "ңдар", "ңдер", "дiкi", "тiкi", "нiкi", "атын", "етiн","йтын", "йтiн",
             "гелi", "қалы", "келi", "ғалы", "шама", "шеме",
@@ -90,11 +84,4 @@ public class KazakhStemmerTokenFilter extends TokenFilter {
 
             "н", "р", "п", "й",
     };
-
-
-    public static final Charset WINDOWS_1251 = Charset.forName("WINDOWS-1251");
-    private static String ToUtf8Encode(String source){
-        byte[] byteText = source.getBytes(WINDOWS_1251);
-        return new String(byteText , UTF_8);
-    }
 }
