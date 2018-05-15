@@ -1,5 +1,7 @@
 # Плагин "Стеммер казахского языка" для Elasticsearch 5.6.0
 
+[![Build Status](https://travis-ci.com/maximgorbatyuk/Kazakh-Stemmer-Elasticsearch-Plugin.svg?branch=master)](https://travis-ci.com/maximgorbatyuk/Kazakh-Stemmer-Elasticsearch-Plugin)
+
 Требование к структуре плагина для установки:
 1. Должен быть zip-архив
 2. В архиве должна быть папка elasticsearch
