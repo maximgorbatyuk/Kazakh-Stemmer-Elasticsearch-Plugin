@@ -28,3 +28,11 @@ jar {
         attributes 'Main-Class': 'org.elasticsearch.plugin.KazakhStemmerPlugin'
     }
 }
+
+sourceSets {
+    test {
+        java {
+            srcDirs = ["test/model"]
+        }
+    }
+}
