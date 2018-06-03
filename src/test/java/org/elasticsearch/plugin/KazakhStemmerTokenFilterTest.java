@@ -44,7 +44,7 @@ public class KazakhStemmerTokenFilterTest {
     @Test
     public void stem_ВСловеБольшеОдногоОкончания_3() {
         final String source = "келеді";
-        final String expected = "келе";
+        final String expected = "ке";
 
         assertEquals(expected, KazakhStemmerTokenFilter.stem(source));
     }
@@ -83,8 +83,8 @@ public class KazakhStemmerTokenFilterTest {
 
     @Test
     public void stem_СловоПолностьюПовторяетОдноИзОкончаний_ВозвращаетсяМинимальнаяЧасть() {
-        final String source = "сiздер";
-        final String expected = "сiз";
+        final String source = "сіздер";
+        final String expected = "сіз";
 
         assertEquals(expected, KazakhStemmerTokenFilter.stem(source));
     }
@@ -95,5 +95,49 @@ public class KazakhStemmerTokenFilterTest {
         final String expected = "сл";
 
         assertEquals(expected, KazakhStemmerTokenFilter.stem(source));
+    }
+
+    @Test
+    public void stem_ВСловеНетГласных_ВозвращаетсяИсходное() {
+        final String source = "нгднк";
+        final String expected = "нгднк";
+
+        assertEquals(expected, KazakhStemmerTokenFilter.stem(source));
+    }
+
+    //----------------------------
+    @Test
+    public void continueStemming_СловоСНесколькимиГласными_НеОк(){
+        final String source = "слово";
+        final boolean expected = true;
+        assertEquals(expected, KazakhStemmerTokenFilter.continueStemming(source));
+    }
+
+    @Test
+    public void continueStemming_СловоСНесколькимиГласнымиКазахскогоЯзыка_НеОк(){
+        final String source = "слұви";
+        final boolean expected = true;
+        assertEquals(expected, KazakhStemmerTokenFilter.continueStemming(source));
+    }
+
+    @Test
+    public void continueStemming_СловоСОднойГласной_Ок(){
+        final String source = "слов";
+        final boolean expected = false;
+        assertEquals(expected, KazakhStemmerTokenFilter.continueStemming(source));
+    }
+
+    @Test
+    public void continueStemming_СловоСОднойГласнойКазахскогоЯзыка_Ок(){
+        final String source = "слұв";
+        final boolean expected = false;
+        assertEquals(expected, KazakhStemmerTokenFilter.continueStemming(source));
+    }
+
+    @Test
+    public void continueStemming_СловоБезГласных_Ок(){
+        final String source = "нгднк";
+        final boolean expected = false;
+        assertEquals(expected, KazakhStemmerTokenFilter.continueStemming(source));
     }
 }

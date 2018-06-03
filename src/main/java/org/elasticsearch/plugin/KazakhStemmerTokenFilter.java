@@ -6,6 +6,8 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // Код практически скопипастен отсюда
 // https://github.com/vgrichina/ukrainian-stemmer/blob/master/src/main/groovy/com/componentix/nlp/stemmer/uk/Stemmer.groovy
@@ -44,7 +46,7 @@ public class KazakhStemmerTokenFilter extends TokenFilter {
     public static String stem(String word)
     {
         // don't change short words
-        if (word.length() <= PROCESSING_MINIMAL_WORD_LENGTH ) return word;
+        if (word.length() <= PROCESSING_MINIMAL_WORD_LENGTH || !continueStemming(word)) return word;
 
         // try simple trim
         for (int i = 0; i < suffixes.length; i++) {
@@ -53,13 +55,18 @@ public class KazakhStemmerTokenFilter extends TokenFilter {
             if (word.endsWith(suffix)) {
 
                 String trimmed = word.substring(0, word.length() - suffix.length());
-
-                if (trimmed.length() > PROCESSING_MINIMAL_WORD_LENGTH) {
-                    return stem(trimmed);
-                }
+                return stem(trimmed);
             }
         }
         return word;
+    }
+
+    private static Pattern _vowelChars = Pattern.compile("[аәоөұүыіеиуёэюя]");
+
+    public static boolean continueStemming(String word) {
+        Matcher matcher = _vowelChars.matcher(word);
+        // метод find вызывается на каждое совпадение, и посему если он вызывается хотя бы два раза, то значит в слове две гласных.
+        return matcher.find() && matcher.find();
     }
 
     // окончания расставлены в массиве так, чтобы сначала отсекались наиболее длинное сочетание букв
